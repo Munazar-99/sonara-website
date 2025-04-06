@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Job {
+  id              String   @id
+  workOrderNumber String   @unique
+  type            String
+  size            String
+  numberOfPallets Int
+  lineNumber      String
+  scheduledDate   DateTime
+  status          String
+  progress        Int
+  instructions    String[]
+  userId          String?
+  users           users?   @relation(fields: [userId], references: [id])
+}
+
+model password_reset_session {
+  id        String   @id
+  userId    String
+  email     String
+  expiresAt DateTime
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model sessions {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id                     String                   @id
+  email                  String                   @unique
+  passwordHash           String?
+  createdAt              DateTime                 @default(now())
+  apiKey                 String?
+  billingRate            Float                    @default(0.5)
+  lastActive             DateTime?
+  role                   UserRole                 @default(standard)
+  status                 UserStatus               @default(pending)
+  updatedAt              DateTime                 @default(now())
+  currentSpend           Float                    @default(0.0)
+  callsMade              Int                      @default(0)
+  minutesUsed            Int                      @default(0)
+  name                   String
+  Job                    Job[]
+  password_reset_session password_reset_session[]
+  sessions               sessions[]
+}
+
+model EarlyAccess {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  businessName String
+  createdAt    DateTime @default(now())
+}
+
+enum UserRole {
+  admin
+  standard
+}
+
+enum UserStatus {
+  active
+  pending
+  suspended
+}
